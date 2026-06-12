@@ -1,6 +1,7 @@
 
 schema = """
 
+
 DROP TABLE IF EXISTS import_log;
 DROP TABLE IF EXISTS event_category;
 DROP TABLE IF EXISTS event_source;
@@ -9,6 +10,7 @@ DROP TABLE IF EXISTS source;
 DROP TABLE IF EXISTS category;
 DROP TABLE IF EXISTS geometry;
 DROP TABLE IF EXISTS geometry_type;
+DROP TABLE IF EXISTS district;
 DROP TABLE IF EXISTS event;
 
 CREATE TABLE event (
@@ -16,9 +18,20 @@ CREATE TABLE event (
 	title  VARCHAR(255) NOT NULL, -- Do przecinka z tego co przydchodzi w polu title
 	description TEXT,
 	start_date TIMESTAMP NOT NULL,
-	end_date TIMESTAMP,
-	state VARCHAR(100), -- do zastanowienia czy tak czy osobna tabela
-	county VARCHAR(100)
+	end_date TIMESTAMP
+);
+
+CREATE TABLE district (
+	id SERIAL PRIMARY KEY,
+	event_id INTEGER ,
+	state CHAR(100),
+	county CHAR(100),
+	
+	CONSTRAINT fk_district_event
+		FOREIGN KEY (event_id)
+		REFERENCES event(id)
+		ON UPDATE CASCADE
+		ON DELETE CASCADE --usuwamy razem wszystko
 );
 
 CREATE TABLE geometry_type (
@@ -129,8 +142,4 @@ CREATE TABLE import_log (
     status VARCHAR(100) NOT NULL,
     error_message TEXT NOT NULL
 );
-
-INSERT INTO geometry_type(type) VALUES ('Point');
-INSERT INTO geometry_type(type) VALUES ('Polygon');
-INSERT INTO geometry_type(type) VALUES ('LineString');
 """
