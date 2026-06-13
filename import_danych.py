@@ -1,6 +1,6 @@
 import sqlite3
 import requests
-
+from sqlalchemy import text
 
 #Import kategorii
 def import_categories(categories, engine):
