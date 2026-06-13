@@ -1,8 +1,6 @@
 
 schema = """
 
-
-
 DROP TABLE IF EXISTS import_log;
 DROP TABLE IF EXISTS event_category;
 DROP TABLE IF EXISTS event_source;
@@ -49,7 +47,7 @@ CREATE TABLE geometry (
 	longitude FLOAT NOT NULL CHECK (180 >= longitude AND longitude >= -180),
 	type_id INTEGER NOT NULL,
 	magnitude FLOAT,
-	unit FLOAT,
+	unit VARCHAR(50),
 	measure_date TIMESTAMP NOT NULL,
 
 	CONSTRAINT fk_geometry_type_geometry
@@ -68,7 +66,7 @@ CREATE TABLE category (
 
 CREATE TABLE source (
 	id SERIAL PRIMARY KEY,
-    abbreviation VARCHAR(50) NOT NULL,
+	abbreviation VARCHAR(50) NOT NULL,
 	title VARCHAR(255) NOT NULL,
 	description TEXT
 	
@@ -152,51 +150,95 @@ CREATE TABLE import_log (
 
 analyze_1 = """
 SELECT 
-    c.title AS kategoria, 
-    c.abbreviation AS skrot,
-    COUNT(ec.event_id) AS liczba_zdarzen
+    c.title AS category_name, 
+    c.abbreviation AS abbreviation,
+    COUNT(ec.event_id) AS amount_of_events
 FROM category c
 JOIN event_category ec ON c.id = ec.category_id
 GROUP BY c.title, c.abbreviation
-ORDER BY liczba_zdarzen DESC
+ORDER BY amount_of_events DESC
 LIMIT 10;
 """
 
 analyze_2 = """
 SELECT 
-    el.country AS kraj, 
-    COUNT(e.id) AS liczba_zdarzen
+    el.country AS country, 
+    COUNT(e.id) AS amount_of_events
 FROM event e
 JOIN event_location el ON e.id = el.event_id
 WHERE el.country IS NOT NULL
 GROUP BY el.country
-ORDER BY liczba_zdarzen DESC;
+ORDER BY amount_of_events DESC
+LIMIT 10;
 """
 
 
 analyze_3 ="""
 
 SELECT 
-    e.title AS nazwa_zdarzenia,
-    e.start_date AS data_rozpoczecia,
-    s.title AS zrodlo_danych
+    e.title AS event_title,
+    e.start_date AS start_date,
+    s.title AS data_source
 FROM event e
 JOIN event_source es ON e.id = es.event_id
 JOIN source s ON es.source_id = s.id
-WHERE e.end_date IS NULL OR e.end_date > CURRENT_TIMESTAMP
-ORDER BY e.start_date DESC;
+WHERE e.end_date IS NULL
+ORDER BY e.start_date DESC
+LIMIT 10;
 
 """
 
 
 analyze_4 ="""
-
+SELECT DISTINCT
+    c.title AS category_name,
+    e.title AS event_title,
+    g.magnitude AS max_magnitude
+FROM category c
+JOIN event_category ec ON c.id = ec.category_id
+JOIN event e ON ec.event_id = e.id
+JOIN event_geometry eg ON e.id = eg.event_id
+JOIN geometry g ON eg.geometry_id = g.id
+WHERE e.id = (
+    SELECT ec_sub.event_id
+    FROM event_category ec_sub
+    JOIN event_geometry eg_sub ON ec_sub.event_id = eg_sub.event_id
+    JOIN geometry g_sub ON eg_sub.geometry_id = g_sub.id
+    WHERE ec_sub.category_id = c.id
+    ORDER BY g_sub.magnitude DESC NULLS LAST
+    LIMIT 1
+)
+AND g.magnitude = (
+    SELECT MAX(g_sub2.magnitude) 
+    FROM event_geometry eg_sub2 
+    JOIN geometry g_sub2 ON eg_sub2.geometry_id = g_sub2.id 
+    WHERE eg_sub2.event_id = e.id
+); 
 
 """
 
 
-analyze_5 =""""
+analyze_5 ="""
 
-
+WITH MaksymalneCzasy AS (
+    SELECT 
+        c.id AS category_id,
+        MAX(e.end_date - e.start_date) AS max_how_long
+    FROM category AS c
+    JOIN event_category AS ec ON ec.category_id = c.id
+    JOIN event AS e ON e.id = ec.event_id
+    WHERE e.end_date IS NOT NULL
+    GROUP BY c.id
+)
+SELECT 
+    c.title AS category_name,
+    e.title AS event_name,
+    (e.end_date - e.start_date) AS how_long
+FROM category AS c
+JOIN event_category AS ec ON ec.category_id = c.id
+JOIN event AS e ON e.id = ec.event_id
+JOIN MaksymalneCzasy mc 
+    ON mc.category_id = c.id 
+    AND (e.end_date - e.start_date) = mc.max_how_long;
 
 """

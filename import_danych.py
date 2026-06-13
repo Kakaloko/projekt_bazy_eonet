@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 import  reverse_geocode as  rg
 
 #Import kategorii
@@ -163,7 +164,7 @@ def import_event(events , engine) -> None:
                             )
                             VALUES (
                                 :lat, :lon, :type_id,
-                                NULL, NULL, :date
+                                :magnitude, :unit, :date
                             )
                             RETURNING id
                         """),
@@ -171,6 +172,8 @@ def import_event(events , engine) -> None:
                             "lat": lat,
                             "lon": lon,
                             "type_id": type_id,
+                            "magnitude": geom.get("magnitudeValue"),
+                            "unit": geom.get("magnitudeUnit"),
                             "date": geom.get("date")
                         }
                     )
@@ -265,7 +268,7 @@ def import_event(events , engine) -> None:
                     
                     
                 if last_lat is not None and last_lon is not None:
-                    location = rg.get((last_lat, last_lon))[0]
+                    location = rg.get((last_lat, last_lon))
 
                 conn.execute(
                     text("""
