@@ -3,14 +3,7 @@ import requests
 
 
 #Import kategorii
-def import_categories():
-    response = requests.get(
-        API_URL_CATEGORIES,
-        timeout=TIMEOUT_SECONDS
-    )
-    response.raise_for_status()
-
-    categories = response.json()["categories"]
+def import_categories(categories, engine):
 
     with engine.begin() as conn:
 
@@ -42,14 +35,7 @@ def import_categories():
 
 
 #Import zrodel
-def import_sources():
-    response = requests.get(
-        API_URL_SOURCES,
-        timeout=TIMEOUT_SECONDS
-    )
-    response.raise_for_status()
-
-    sources = response.json()["sources"]
+def import_sources(sources, engine):
 
     with engine.begin() as conn:
 
