@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 from sqlalchemy import text
+import  reverse_geocode as  rg
 
 #Import kategorii
 def import_categories(categories, engine):
