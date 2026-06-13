@@ -261,6 +261,38 @@ def import_event(events , engine) -> None:
                         "category_id": category_id
                     }
                 )
+                    
+                    
+                    
+                if last_lat is not None and last_lon is not None:
+                    location = rg.get((last_lat, last_lon))[0]
+
+                conn.execute(
+                    text("""
+                        INSERT INTO event_location (
+                            event_id,
+                            country_code,
+                            country,
+                            state,
+                            city
+                        )
+                        VALUES (
+                            :event_id,
+                            :country_code,
+                            :country,
+                            :state,
+                            :city
+                        )
+                        ON CONFLICT DO NOTHING
+                    """),
+                    {
+                        "event_id": event_id,
+                        "country_code": location.get("country_code"),
+                        "country": location.get("country"),
+                        "state": location.get("state"),
+                        "city": location.get("city")
+                    }
+                )
 
 
 
