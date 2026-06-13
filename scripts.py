@@ -61,7 +61,7 @@ CREATE TABLE geometry (
 
 CREATE TABLE category (
 	id SERIAL PRIMARY KEY,
-	abbreviation VARCHAR(10) NOT NULL,
+	abbreviation VARCHAR(50) NOT NULL,
 	title VARCHAR(255) NOT NULL,
 	description TEXT
 );
