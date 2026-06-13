@@ -1,2 +1,3 @@
 eonet.sqlite3
 conf.txt
+/__pycache__/*
