@@ -1,0 +1,5 @@
+SQLAlchemy>=2.0.0
+pandas
+requests
+reverse-geocode
+psycopg2-binary

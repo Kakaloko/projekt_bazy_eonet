@@ -2,6 +2,7 @@
 schema = """
 
 
+
 DROP TABLE IF EXISTS import_log;
 DROP TABLE IF EXISTS event_category;
 DROP TABLE IF EXISTS event_source;
@@ -10,7 +11,7 @@ DROP TABLE IF EXISTS source;
 DROP TABLE IF EXISTS category;
 DROP TABLE IF EXISTS geometry;
 DROP TABLE IF EXISTS geometry_type;
-DROP TABLE IF EXISTS district;
+DROP TABLE IF EXISTS event_location;
 DROP TABLE IF EXISTS event;
 
 CREATE TABLE event (
@@ -21,17 +22,20 @@ CREATE TABLE event (
 	end_date TIMESTAMP
 );
 
-CREATE TABLE district (
-	id SERIAL PRIMARY KEY,
-	event_id INTEGER ,
-	state CHAR(100),
-	county CHAR(100),
-	
-	CONSTRAINT fk_district_event
-		FOREIGN KEY (event_id)
-		REFERENCES event(id)
-		ON UPDATE CASCADE
-		ON DELETE CASCADE --usuwamy razem wszystko
+CREATE TABLE event_location (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL, 
+    country_code CHAR(2),
+    country VARCHAR(100),
+    state VARCHAR(100),
+    city VARCHAR(100),
+
+   
+    CONSTRAINT fk_event_location_event
+        FOREIGN KEY (event_id) 
+        REFERENCES event(id)
+		ON UPDATE CASCADE 
+        ON DELETE CASCADE
 );
 
 CREATE TABLE geometry_type (
