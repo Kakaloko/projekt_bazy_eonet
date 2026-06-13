@@ -68,6 +68,7 @@ CREATE TABLE category (
 
 CREATE TABLE source (
 	id SERIAL PRIMARY KEY,
+    abbreviation VARCHAR(50) NOT NULL,
 	title VARCHAR(255) NOT NULL,
 	description TEXT
 	
@@ -146,4 +147,56 @@ CREATE TABLE import_log (
     status VARCHAR(100) NOT NULL,
     error_message TEXT NOT NULL
 );
+"""
+
+
+analyze_1 = """
+SELECT 
+    c.title AS kategoria, 
+    c.abbreviation AS skrot,
+    COUNT(ec.event_id) AS liczba_zdarzen
+FROM category c
+JOIN event_category ec ON c.id = ec.category_id
+GROUP BY c.title, c.abbreviation
+ORDER BY liczba_zdarzen DESC
+LIMIT 10;
+"""
+
+analyze_2 = """
+SELECT 
+    el.country AS kraj, 
+    COUNT(e.id) AS liczba_zdarzen
+FROM event e
+JOIN event_location el ON e.id = el.event_id
+WHERE el.country IS NOT NULL
+GROUP BY el.country
+ORDER BY liczba_zdarzen DESC;
+"""
+
+
+analyze_3 ="""
+
+SELECT 
+    e.title AS nazwa_zdarzenia,
+    e.start_date AS data_rozpoczecia,
+    s.title AS zrodlo_danych
+FROM event e
+JOIN event_source es ON e.id = es.event_id
+JOIN source s ON es.source_id = s.id
+WHERE e.end_date IS NULL OR e.end_date > CURRENT_TIMESTAMP
+ORDER BY e.start_date DESC;
+
+"""
+
+
+analyze_4 ="""
+
+
+"""
+
+
+analyze_5 =""""
+
+
+
 """

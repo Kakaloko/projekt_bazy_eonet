@@ -45,16 +45,19 @@ def import_sources(sources, engine):
                 text("""
                     INSERT INTO source (
                         title,
+                        abbreviation,
                         description
                     )
                     VALUES (
                         :title,
+                        :abbreviation,
                         :desc
                     )
                     ON CONFLICT DO NOTHING
                 """),
                 {
                     "title": source["title"],
+                    "abbreviation": source.get("id"),
                     "desc": source.get("url")
                 }
             )
@@ -67,56 +70,14 @@ def import_sources(sources, engine):
 
 
 
-def import_event(engine, event_id):
-
-    with engine.begin() as conn:
-        source_id = result.scalar()
-
-    conn.execute(
-        text("""
-            INSERT INTO event_source (
-            event_id,
-            source_id
-        )
-        VALUES (
-            :event_id,
-            :source_id
-        )
-        ON CONFLICT DO NOTHING
-    """),
-    {
-        "event_id": event_id,
-        "source_id": source_id
-    }         
-) 
-    
-    category_id = result.scalar()
-
-    conn.execute(
-        text("""
-            INSERT INTO event_category (
-                event_id,
-                category_id
-            )
-            VALUES (
-                :event_id,
-                :category_id
-            )
-            ON CONFLICT DO NOTHING
-        """),
-        {
-            "event_id": event_id,
-            "category_id": category_id
-        }
-)
 
 
 
 
-def insert_event(events: list[dict], engine) -> None:
+def import_event(events , engine) -> None:
 
     try:
-        with engine.connect() as conn:
+        with engine.begin() as conn:
 
             for event in events:
 
@@ -236,7 +197,7 @@ def insert_event(events: list[dict], engine) -> None:
                         text("""
                             SELECT id
                             FROM source
-                            WHERE title = :title
+                            WHERE abbreviation = :title
                         """),
                         {
                             "title": source["id"]
