@@ -17,7 +17,7 @@ with sqlite3.connect(DB_PATH) as conn:
             VALUES (?, ?, ?)
             """,
             (
-                str(category["id"]),
+                
                 category["title"],
                 category.get("description")
             )
