@@ -3,3 +3,4 @@ pandas
 requests
 reverse-geocode
 psycopg2-binary
+matplotlib

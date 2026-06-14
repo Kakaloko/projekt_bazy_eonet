@@ -145,7 +145,7 @@ def import_event(events , engine) -> None:
                 )
                 
                 row = result.fetchone()
-                records_saved+=1
+        
                 if row:
                     type_id = row[0]
                 else:
@@ -211,7 +211,7 @@ def import_event(events , engine) -> None:
                         "title": source["id"]
                     }
                 )
-                records_saved +=1
+                
             source_id = result.scalar()
 
             if source_id is not None:
