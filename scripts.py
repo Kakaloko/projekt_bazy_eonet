@@ -1,6 +1,6 @@
 #create 
 schema = """
-
+DROP VIEW IF EXISTS event_summary;
 DROP TABLE IF EXISTS import_log;
 DROP TABLE IF EXISTS event_category;
 DROP TABLE IF EXISTS event_source;
@@ -143,7 +143,7 @@ CREATE TABLE import_log (
     records_received INTEGER NOT NULL,
     records_saved INTEGER NOT NULL,
     status VARCHAR(100) NOT NULL,
-    error_message TEXT NOT NULL
+    error_message TEXT
 );
 """
 
