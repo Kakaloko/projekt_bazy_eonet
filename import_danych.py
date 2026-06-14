@@ -122,33 +122,45 @@ def import_event(events , engine) -> None:
             last_lon = None
 
             for geom in event["geometry"]:
-
                 coords = geom.get("coordinates", [None, None])
                 lon = coords[0]
                 lat = coords[1]
+                measure_date = geom.get("date")
 
+              
                 if lon is not None and lon > 180:
                     lon = lon - 360
                 
                 last_lat = lat
                 last_lon = lon
-
                 
                 geom_type = geom.get("type", "Point")
 
-                result = conn.execute(
+                existing_geom = conn.execute(
                     text("""
-                        SELECT id FROM geometry_type
-                        WHERE type = :type
+                        SELECT g.id 
+                        FROM geometry g
+                        JOIN event_geometry eg ON g.id = eg.geometry_id
+                        WHERE eg.event_id = :event_id AND g.measure_date = :measure_date
                     """),
-                    {"type": geom_type}
-                )
+                    {
+                        "event_id": event_id,
+                        "measure_date": measure_date
+                    }
+                ).scalar()
+            
+
                 
-                row = result.fetchone()
-        
-                if row:
-                    type_id = row[0]
-                else:
+                if existing_geom is not None:
+                    continue
+
+                type_id = conn.execute(
+                    text("SELECT id FROM geometry_type WHERE type = :type"),
+                    {"type": geom_type}
+                ).scalar()
+                records_saved += 1
+
+                if not type_id:
                     type_id = conn.execute(
                         text("""
                             INSERT INTO geometry_type (type)
@@ -157,10 +169,10 @@ def import_event(events , engine) -> None:
                         """),
                         {"type": geom_type}
                     ).scalar()
-                    records_saved +=1
+                    records_saved += 1
 
-                
-                result = conn.execute(
+               
+                geometry_id = conn.execute(
                     text("""
                         INSERT INTO geometry (
                             latitude, longitude, type_id,
@@ -178,12 +190,12 @@ def import_event(events , engine) -> None:
                         "type_id": type_id,
                         "magnitude": geom.get("magnitudeValue"),
                         "unit": geom.get("magnitudeUnit"),
-                        "date": geom.get("date")
+                        "date": measure_date
                     }
-                )
-                records_saved +=1
-                geometry_id = result.scalar()
+                ).scalar()
+                records_saved += 1
 
+       
                 conn.execute(
                     text("""
                         INSERT INTO event_geometry (
@@ -197,6 +209,7 @@ def import_event(events , engine) -> None:
                         "geometry_id": geometry_id
                     }
                 )
+                records_saved += 1
             
 
             

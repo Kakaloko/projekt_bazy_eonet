@@ -27,8 +27,10 @@ CREATE TABLE event_location (
     country VARCHAR(100),
     state VARCHAR(100),
     city VARCHAR(100),
-
    
+    CONSTRAINT uq_event_id
+		UNIQUE (event_id),
+    
     CONSTRAINT fk_event_location_event
         FOREIGN KEY (event_id) 
         REFERENCES event(id)
