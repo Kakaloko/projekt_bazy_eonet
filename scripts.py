@@ -1,4 +1,4 @@
-
+#create 
 schema = """
 
 DROP TABLE IF EXISTS import_log;
@@ -147,7 +147,7 @@ CREATE TABLE import_log (
 );
 """
 
-
+#analyze
 analyze_1 = """
 SELECT 
     c.title AS category_name, 
@@ -241,4 +241,33 @@ JOIN MaksymalneCzasy mc
     ON mc.category_id = c.id 
     AND (e.end_date - e.start_date) = mc.max_how_long;
 
+"""
+
+# View
+event_summary = """
+
+DROP VIEW IF EXISTS event_summary;
+CREATE VIEW event_summary AS
+SELECT 
+    e.id as event_id,
+    e.title as event_title,
+    e.start_date as start_date,
+    e.end_date as end_date,
+    el.country_code as country_code,
+    el.country as country,
+    el.state as state,
+    el.city as city,
+    g.magnitude as magnitude,
+    g.unit as unit,
+    g.measure_date as last_measure_date
+FROM event_location AS el
+JOIN event AS e ON e.id = el.event_id
+JOIN event_geometry AS eg ON eg.event_id = e.id
+JOIN geometry AS g ON g.id = eg.geometry_id
+WHERE g.id = (SELECT eg_sub.geometry_id 
+    FROM event_geometry AS eg_sub
+    JOIN geometry AS g_sub ON eg_sub.geometry_id = g_sub.id
+    WHERE eg_sub.event_id = e.id 
+    ORDER BY g_sub.measure_date DESC
+    LIMIT 1);
 """
