@@ -1,18 +1,12 @@
-import pandas as pd
 from __future__ import annotations
-from typing import Any
-from time import sleep
-from sqlalchemy import URL, create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
 import pandas as pd
-import reverse_geocode as rg
-import requests
+from sqlalchemy import text
 
 def event_category(category, conn):
     if not isinstance(category, str):
         return None
 
-    query = f"""
+    query = """
     SELECT
         e.id,
         e.title AS event_title,
@@ -20,15 +14,13 @@ def event_category(category, conn):
         e.end_date,
         c.title AS category
     FROM event e
-    JOIN event_category ec
-        ON e.id = ec.event_id
-    JOIN category c
-        ON ec.category_id = c.id
-    WHERE c.title = %s
+    JOIN event_category ec ON e.id = ec.event_id
+    JOIN category c ON ec.category_id = c.id
+    WHERE c.title = :category
     ORDER BY e.start_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"category": category})
 
-    return pd.read_sql(query, con=conn, params=[category])
 
 def event_country(country, conn):
     if not isinstance(country, str):
@@ -45,11 +37,11 @@ def event_country(country, conn):
         e.end_date
     FROM event e
     JOIN event_location el ON e.id = el.event_id
-    WHERE el.country = %s
+    WHERE el.country = :country
     ORDER BY e.start_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"country": country})
 
-    return pd.read_sql(query, con=conn, params=[country])
 
 def event_city(city, conn):
     if not isinstance(city, str):
@@ -65,14 +57,14 @@ def event_city(city, conn):
         e.start_date
     FROM event e
     JOIN event_location el ON e.id = el.event_id
-    WHERE el.city = %s
+    WHERE el.city = :city
     ORDER BY e.start_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"city": city})
 
-    return pd.read_sql(query, con=conn, params=[city])
 
-def event_source(source_title, conn):
-    if not isinstance(source_title, str):
+def event_source(abbreviation, conn):
+    if not isinstance(abbreviation, str):
         return None
 
     query = """
@@ -85,11 +77,11 @@ def event_source(source_title, conn):
     FROM event e
     JOIN event_source es ON e.id = es.event_id
     JOIN source s ON es.source_id = s.id
-    WHERE s.title = %s
+    WHERE s.abbreviation = :abbreviation
     ORDER BY e.start_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"abbreviation": abbreviation})
 
-    return pd.read_sql(query, con=conn, params=[source_title])
 
 def event_geometry_type(geometry_type, conn):
     if not isinstance(geometry_type, str):
@@ -107,11 +99,11 @@ def event_geometry_type(geometry_type, conn):
     JOIN event_geometry eg ON e.id = eg.event_id
     JOIN geometry g ON eg.geometry_id = g.id
     JOIN geometry_type gt ON g.type_id = gt.id
-    WHERE gt.type = %s
+    WHERE gt.type = :geometry_type
     ORDER BY g.measure_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"geometry_type": geometry_type})
 
-    return pd.read_sql(query, con=conn, params=[geometry_type])
 
 def event_after_date(date, conn):
     if not isinstance(date, str):
@@ -124,11 +116,11 @@ def event_after_date(date, conn):
         start_date,
         end_date
     FROM event
-    WHERE start_date >= %s
+    WHERE start_date >= :date
     ORDER BY start_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"date": date})
 
-    return pd.read_sql(query, con=conn, params=[date])
 
 def event_unit(unit, conn):
     if not isinstance(unit, str):
@@ -144,11 +136,11 @@ def event_unit(unit, conn):
     FROM event e
     JOIN event_geometry eg ON e.id = eg.event_id
     JOIN geometry g ON eg.geometry_id = g.id
-    WHERE g.unit = %s
+    WHERE g.unit = :unit
     ORDER BY g.measure_date DESC
     """
+    return pd.read_sql(text(query), con=conn, params={"unit": unit})
 
-    return pd.read_sql(query, con=conn, params=[unit])
 
 def category_latest_events(category, conn):
     if not isinstance(category, str):
@@ -162,16 +154,14 @@ def category_latest_events(category, conn):
         e.start_date,
         e.end_date
     FROM event e
-    JOIN event_category ec
-        ON e.id = ec.event_id
-    JOIN category c
-        ON ec.category_id = c.id
-    WHERE c.title = %s
+    JOIN event_category ec ON e.id = ec.event_id
+    JOIN category c ON ec.category_id = c.id
+    WHERE c.title = :category
     ORDER BY e.start_date DESC
     LIMIT 20
     """
+    return pd.read_sql(text(query), con=conn, params={"category": category})
 
-    return pd.read_sql(query, con=conn, params=[category])
 
 def event_status(status, conn):
     if not isinstance(status, str):
@@ -202,8 +192,8 @@ def event_status(status, conn):
         WHERE end_date IS NOT NULL
         ORDER BY end_date DESC
         """
+    return pd.read_sql(text(query), con=conn)
 
-    return pd.read_sql(query, con=conn)
 
 def event_country_category(country, category, conn):
     if not isinstance(country, str):
@@ -224,12 +214,8 @@ def event_country_category(country, category, conn):
     JOIN event_location el ON e.id = el.event_id
     JOIN event_category ec ON e.id = ec.event_id
     JOIN category c ON ec.category_id = c.id
-    WHERE el.country = %s
-    AND c.title = %s
+    WHERE el.country = :country
+    AND c.title = :category
     ORDER BY e.start_date DESC
     """
-
-    return pd.read_sql(query, con=conn, params=[country, category])
-
-
-    
+    return pd.read_sql(text(query), con=conn, params={"country": country, "category": category})
