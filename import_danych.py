@@ -106,7 +106,10 @@ def import_event(events , engine) -> None:
                     VALUES (
                         :id, :title, :description, :start_date, :end_date
                     )
-                    ON CONFLICT (id) DO NOTHING
+                    ON CONFLICT (id) DO UPDATE SET
+                        title = excluded.title,
+                        description = excluded.description,
+                        end_date = excluded.end_date
                 """),
                 {
                     "id": event_id,
